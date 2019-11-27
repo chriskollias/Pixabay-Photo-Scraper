@@ -1,0 +1,2 @@
+1) Figure out how to click the Free Download button and access the
+radio options to choose the largest filesize.
