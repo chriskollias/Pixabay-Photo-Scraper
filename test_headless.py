@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import Select
 email_username = "test_mailing@mail.com"
 email_password = "testing123"
 
-display = Display(visible=1, size=(1024, 768))
+display = Display(visible=0, size=(1024, 768))
 display.start()
 driver = webdriver.Chrome()
 
@@ -47,13 +47,19 @@ for image in image_list:
     driver.execute_script("window.scrollTo(0, 99999)")
 
     #Click Free Download button
-    #free_download_button = driver.find_element_by_class_name('pure-button')
-    #print(f"WHAT THE HELL IS THIS? {free_download_button.get_attribute('innerHTML')}")
+    free_download_button = driver.find_element_by_class_name('download_menu')
+    print(f"WHAT THE HELL IS THIS? {free_download_button.get_attribute('outerHTML')}")
+    free_download_button.click()
+
 
     #Click largest image size radio button
-    #radio_button = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div[2]/div[4]/div/table/tbody/tr[4]/td[1]/input')
+    radio_button = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div[2]/div[4]/div/table/tbody/tr[4]/td[1]/input')
+    radio_button.click()
+    #print("test!", radio_button)
 
-    print("test!", radio_button.get_attribute('innerHTML'))
+    #Click image download button
+    image_download_button = driver.find_element_by_class_name('dl_btn')
+    image_download_button.click()
 
     print(driver.current_url)
 
