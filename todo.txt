@@ -1,5 +1,5 @@
-1) Choose correct downloads directory
 2) iterate through whole page
 3) iterate through whole category
 4) iterate from category to category
 
+5) Don't download duplicates
