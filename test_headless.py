@@ -1,13 +1,21 @@
 from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
 
+
+DOWNLOAD_BASE_DIR = "/home/osboxes/Downloads/pixabay_photos/"
 email_username = "test_mailing@mail.com"
 email_password = "testing123"
 
 display = Display(visible=0, size=(1024, 768))
 display.start()
-driver = webdriver.Chrome()
+
+chrome_options = Options()
+#options_argument_string = "download.default_directory=" + DOWNLOAD_BASE_DIR
+prefs = {"download.default_directory": DOWNLOAD_BASE_DIR}
+chrome_options.add_experimental_option('prefs', prefs)
+driver = webdriver.Chrome(options=chrome_options)
 
 
 #Login
@@ -40,7 +48,6 @@ image_list = driver.find_elements_by_class_name('item')
 
 i = 1
 for image in image_list:
-    #print(image.get_attribute('innerHTML'))
     print(f'image count: {i}')
     image.click()
 
