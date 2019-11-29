@@ -1,17 +1,15 @@
-import os
-import time
+import os, math, time
 from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
-import urllib.request
 
 MAIN_URL = 'https://pixabay.com/photos/search/'
 DOWNLOAD_BASE_DIR = "/home/osboxes/Downloads/pixabay_photos/"
 EMAIL_USERNAME = "test_mailing@mail.com"
 EMAIL_PASSWORD = "testing123"
 
-CATEGORIES = [{'Animals': 'https://pixabay.com/images/search/?cat=animals'}]
+CATEGORIES = [{'Animals': 'https://pixabay.com/photos/search/?cat=animals'}]
 
 driver = None
 
@@ -56,31 +54,33 @@ def scrape_category(category_name, category_url):
     #Go to category page
     driver.get(category_url)
 
-    num_of_pages = calc_num_of_pages()
+    num_of_items = calc_num_of_items()
+    num_of_pages = math.ceil(num_of_items / 100)
     current_page_num = 1
 
     while category_has_next_page(current_page_num, num_of_pages):
-        scrape_page(category_name, category_url, current_working_dir)
+        scrape_page(category_name, category_url, current_working_dir, num_of_items)
         next_page()
         current_page_num  += 1
 
-#Download all images from a specific page
-def scrape_page(category_name, page_url, current_working_dir):
-    global driver
 
+#Download all images from a specific page
+def scrape_page(category_name, page_url, current_working_dir, num_of_items):
+    global driver
     #scroll to bottom of page
     driver.execute_script("window.scrollTo(0, 99999)")
 
+    #Get list of images on page
     image_list = driver.find_elements_by_class_name('item')
     image_count = len(image_list)
 
     i = 0
-    #Download image and return to category page when done
-    #while i <= image_count:
-    while i <= 4:
+    #Download  all images on page
+    while i <= image_count:
+    #while i <= 4:
         image_list = driver.find_elements_by_class_name('item')
         image = image_list[i]
-        print(f'Downloading image {i+1} of {image_count} in Category - {category_name}')
+        print(f'Downloading image {i+1} of {num_of_items} in Category - {category_name}')
         image.click()
         image_id = generate_image_id(driver.current_url)
         download_image(current_working_dir,image_id)
@@ -93,7 +93,6 @@ def login():
     global driver, EMAIL_USERNAME, EMAIL_PASSWORD
 
     driver.get('https://pixabay.com/accounts/login/')
-    time.sleep(10)
     driver.find_element_by_id('id_username').send_keys(EMAIL_USERNAME)
     driver.find_element_by_id('id_password').send_keys(EMAIL_PASSWORD)
     driver.find_element_by_class_name('sign_in_button').click()
@@ -102,6 +101,9 @@ def login():
 #Download the image at the specified pixabay URL
 def download_image(current_working_dir, image_id):
     global driver
+
+    time.sleep(10)
+
 
     #create filename that image will be saved as
     save_dir = current_working_dir + image_id + '.png'
@@ -132,12 +134,15 @@ def download_image(current_working_dir, image_id):
     #print(save_dir)
     #print(driver.get_cookies())
     driver.save_screenshot(save_dir)
+    time.sleep(10)
+
 
 #Generate unique image id from image url to be used as image file name
 def generate_image_id(image_url):
     image_url = image_url.replace('https://pixabay.com/photos/', '')
     image_url = image_url.replace('/', '')
     return image_url
+
 
 #check if the image has already been downloaded
 def check_if_already_downloaded(save_dir):
@@ -155,17 +160,22 @@ def category_has_next_page(current_page_num, num_of_pages):
 
 
 #calculate the total number of pages in a given category
-def calc_num_of_pages():
+def calc_num_of_items():
     global driver
-    num_of_pages_element = driver.find_element_by_xpath('//*[@id="content"]/div/div[2]/div/h1')
-    print(num_of_pages_element.get_attribute('outerHTML'))
-    return 1
+    num_of_items_element = driver.find_element_by_xpath('//*[@id="content"]/div/div[2]/div/h1')
+    num_of_items = num_of_items_element.get_attribute("innerHTML")
+    num_of_items = num_of_items.replace(' Free stock photos', '')
+    num_of_items = num_of_items.replace(',', '')
+    return int(num_of_items)
 
 
 #advance the scraper to the next page of the category
 def next_page():
     global driver
-    pass
+
+    next_button = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div[3]/span/div/a')
+    #next_button.find_element_by_css_selector('a').get_attribute('href')
+    next_button.click()
 
 
 if __name__ == '__main__':
