@@ -1,4 +1,5 @@
 import os
+import time
 from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
@@ -25,7 +26,7 @@ def main():
 
 
 def setup_display():
-    display = Display(visible=0, size=(1024, 768))
+    display = Display(visible=1, size=(1024, 768))
     display.start()
 
 
@@ -55,10 +56,13 @@ def scrape_category(category_name, category_url):
     #Go to category page
     driver.get(category_url)
 
-    #need to get list of pages here or do a while loop
+    num_of_pages = calc_num_of_pages()
+    current_page_num = 1
 
-    scrape_page(category_name, category_url, current_working_dir)
-
+    while category_has_next_page(current_page_num, num_of_pages):
+        scrape_page(category_name, category_url, current_working_dir)
+        next_page()
+        current_page_num  += 1
 
 #Download all images from a specific page
 def scrape_page(category_name, page_url, current_working_dir):
@@ -89,6 +93,7 @@ def login():
     global driver, EMAIL_USERNAME, EMAIL_PASSWORD
 
     driver.get('https://pixabay.com/accounts/login/')
+    time.sleep(10)
     driver.find_element_by_id('id_username').send_keys(EMAIL_USERNAME)
     driver.find_element_by_id('id_password').send_keys(EMAIL_PASSWORD)
     driver.find_element_by_class_name('sign_in_button').click()
@@ -140,6 +145,27 @@ def check_if_already_downloaded(save_dir):
         return True
     else:
         return False
+
+
+def category_has_next_page(current_page_num, num_of_pages):
+    if current_page_num <= num_of_pages:
+        return True
+    else:
+        return False
+
+
+#calculate the total number of pages in a given category
+def calc_num_of_pages():
+    global driver
+    num_of_pages_element = driver.find_element_by_xpath('//*[@id="content"]/div/div[2]/div/h1')
+    print(num_of_pages_element.get_attribute('outerHTML'))
+    return 1
+
+
+#advance the scraper to the next page of the category
+def next_page():
+    global driver
+    pass
 
 
 if __name__ == '__main__':
