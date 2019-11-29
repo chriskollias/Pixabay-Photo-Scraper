@@ -1,3 +1,4 @@
+import os
 from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
@@ -32,7 +33,7 @@ def setup_selenium_driver(category_name):
     global driver
 
     chrome_options = Options()
-    current_working_dir = DOWNLOAD_BASE_DIR + '/' + category_name + '/'
+    current_working_dir = DOWNLOAD_BASE_DIR + category_name + '/'
     prefs = {"download.default_directory": current_working_dir}
     chrome_options.add_experimental_option('prefs', prefs)
     driver = webdriver.Chrome(options=chrome_options)
@@ -44,6 +45,11 @@ def scrape_category(category_name, category_url):
 
     print(f'Scraping Category - {category_name}')
     current_working_dir = setup_selenium_driver(category_name)
+
+    #if category directoy doesn't exist yet, create it
+    if not os.path.isdir(current_working_dir):
+        os.mkdir(current_working_dir)
+
     login()
 
     #Go to category page
@@ -66,16 +72,17 @@ def scrape_page(category_name, page_url, current_working_dir):
 
     i = 0
     #Download image and return to category page when done
-    while i <= image_count:
+    #while i <= image_count:
+    while i <= 4:
         image_list = driver.find_elements_by_class_name('item')
         image = image_list[i]
-        print(f'Downloading image {i} of {image_count} in Category - {category_name}')
-        #print(f'current url {driver.current_url}')
+        print(f'Downloading image {i+1} of {image_count} in Category - {category_name}')
         image.click()
-        download_image(current_working_dir)
-        #print("Finished downloading, now returning to page")
+        image_id = generate_image_id(driver.current_url)
+        download_image(current_working_dir,image_id)
         driver.get(page_url)
         i += 1
+
 
 #Log into pixabay using provided email and password
 def login():
@@ -88,12 +95,15 @@ def login():
 
 
 #Download the image at the specified pixabay URL
-def download_image(current_working_dir):
+def download_image(current_working_dir, image_id):
     global driver
-    image_id = ''
+
+    #create filename that image will be saved as
+    save_dir = current_working_dir + image_id + '.png'
 
     #Do not download if image  has already been downloaded
-    if check_if_already_downloaded(current_working_dir, image_id):
+    if check_if_already_downloaded(save_dir):
+        print(f'Image {image_id} has already been downloaded.')
         return
 
     #Scroll to bottom of page
@@ -108,16 +118,28 @@ def download_image(current_working_dir):
     radio_button.click()
 
     #Download image directly
-    #image_download_button = driver.find_element_by_class_name('dl_btn')
-    #image_link_html = image_download_button.get_attribute('outerHTML')
     image_link = driver.find_element_by_css_selector('a.dl_btn').get_attribute('href')
     image_link = image_link.replace('?attachment', '')
-    print(f' Download link is {image_link}')
-    urllib.request.urlretrieve(image_link, current_working_dir)
+    #print(f' Download link is {image_link}')
+    #print(driver.get_cookies()[0])
+    driver.get(image_link)
+    #urllib.request.urlretrieve(image_link, current_working_dir)
+    #print(save_dir)
+    #print(driver.get_cookies())
+    driver.save_screenshot(save_dir)
 
+#Generate unique image id from image url to be used as image file name
+def generate_image_id(image_url):
+    image_url = image_url.replace('https://pixabay.com/photos/', '')
+    image_url = image_url.replace('/', '')
+    return image_url
 
-def check_if_already_downloaded(current_working_dir, image_id):
-    return False
+#check if the image has already been downloaded
+def check_if_already_downloaded(save_dir):
+    if os.path.isfile(save_dir):
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':

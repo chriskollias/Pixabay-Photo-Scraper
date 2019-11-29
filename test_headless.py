@@ -12,7 +12,6 @@ display = Display(visible=0, size=(1024, 768))
 display.start()
 
 chrome_options = Options()
-#options_argument_string = "download.default_directory=" + DOWNLOAD_BASE_DIR
 prefs = {"download.default_directory": DOWNLOAD_BASE_DIR}
 chrome_options.add_experimental_option('prefs', prefs)
 driver = webdriver.Chrome(options=chrome_options)
@@ -33,18 +32,10 @@ print(driver.title)
 
 print(driver.current_url)
 
-
-#category_button = Select(driver.find_elements_by_xpath("//*[contains(text(), 'Category')]"))
-#category_button.click()
-#print(category_button)
-#category_button.select_by_visible_text('Animals')
-
 driver.execute_script("window.scrollTo(0, 99999)")
 
 #image_grid = driver.find_element_by_class_name('flex_grid')
 image_list = driver.find_elements_by_class_name('item')
-
-#print(len(image_list))
 
 i = 1
 for image in image_list:
