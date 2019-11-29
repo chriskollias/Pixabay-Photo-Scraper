@@ -2,6 +2,7 @@ from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
+import urllib.request
 
 MAIN_URL = 'https://pixabay.com/photos/search/'
 DOWNLOAD_BASE_DIR = "/home/osboxes/Downloads/pixabay_photos/"
@@ -50,11 +51,11 @@ def scrape_category(category_name, category_url):
 
     #need to get list of pages here or do a while loop
 
-    scrape_page(category_url, current_working_dir)
+    scrape_page(category_name, category_url, current_working_dir)
 
 
 #Download all images from a specific page
-def scrape_page(page_url, current_working_dir):
+def scrape_page(category_name, page_url, current_working_dir):
     global driver
 
     #scroll to bottom of page
@@ -68,11 +69,11 @@ def scrape_page(page_url, current_working_dir):
     while i <= image_count:
         image_list = driver.find_elements_by_class_name('item')
         image = image_list[i]
-        print(f'image count: {i}')
-        print(f'current url {driver.current_url}')
+        print(f'Downloading image {i} of {image_count} in Category - {category_name}')
+        #print(f'current url {driver.current_url}')
         image.click()
         download_image(current_working_dir)
-        print("Finished downloading, now returning to page")
+        #print("Finished downloading, now returning to page")
         driver.get(page_url)
         i += 1
 
@@ -106,10 +107,13 @@ def download_image(current_working_dir):
     radio_button = driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div[2]/div[4]/div/table/tbody/tr[4]/td[1]/input')
     radio_button.click()
 
-    #Click image download button
-    image_download_button = driver.find_element_by_class_name('dl_btn')
-    image_download_button.click()
-
+    #Download image directly
+    #image_download_button = driver.find_element_by_class_name('dl_btn')
+    #image_link_html = image_download_button.get_attribute('outerHTML')
+    image_link = driver.find_element_by_css_selector('a.dl_btn').get_attribute('href')
+    image_link = image_link.replace('?attachment', '')
+    print(f' Download link is {image_link}')
+    urllib.request.urlretrieve(image_link, current_working_dir)
 
 
 def check_if_already_downloaded(current_working_dir, image_id):
