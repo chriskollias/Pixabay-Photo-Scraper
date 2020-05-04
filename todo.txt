@@ -1,3 +1,0 @@
-3) iterate through whole category
-4) iterate from category to category
-5) screenshot issue?
